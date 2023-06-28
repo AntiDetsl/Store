@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Store.BLL;
+using Store.BLL.Interfaces;
+using Store.DAL;
 using Store.DAL.Context;
+using Store.DAL.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +12,15 @@ builder.Services.AddControllersWithViews();
 
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<StoreDbContext>(x => x.UseSqlServer(connection));
+
+builder.Services.AddScoped<IOrderDao, OrderDao>();
+builder.Services.AddScoped<IOrderLogic, OrderLogic>();
+
+builder.Services.AddScoped<IOrderItemDao, OrderItemDao>();
+builder.Services.AddScoped<IOrderItemLogic, OrderItemLogic>();
+
+builder.Services.AddScoped<IProviderDao, ProviderDao>();
+builder.Services.AddScoped<IProviderLogic, ProviderLogic>();
 
 var app = builder.Build();
 
@@ -28,6 +41,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Orders}/{action=Index}/{id?}");
 
 app.Run();

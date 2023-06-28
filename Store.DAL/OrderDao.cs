@@ -38,7 +38,10 @@ namespace Store.DAL
 
         public async Task<ICollection<Order>> GetAllAsync()
         {
-            var orders = _dbContext.Orders.AsNoTracking();
+            var orders = _dbContext.Orders
+                .AsNoTracking()
+                .Include(o => o.Items)
+                .Include(o => o.Provider);
             return await orders.ToListAsync();
         }
 
@@ -47,6 +50,7 @@ namespace Store.DAL
             var order = await _dbContext.Orders
                 .AsNoTracking()
                 .Include(o => o.Items)
+                .Include(o => o.Provider)
                 .SingleAsync(o => o.Id == id);
 
             return order;

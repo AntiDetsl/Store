@@ -1,0 +1,35 @@
+﻿@model IEnumerable<DisplayOrderVM>
+
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h1>Orders</h1>
+
+<p>
+    <a class="btn btn-info" asp-controller="Orders" asp-action="Create">Create New Order</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Number</th>
+            <th scope="col">Date</th>
+            <th scope="col">Provider</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model) {
+                    <tr class="table-secondary">
+                        <th scope="row">@item.Number</th>
+                        <td>@item.Date.ToShortDateString()</td>
+                        <td>@item.Provider</td>
+                        <td>
+                            <a class="btn btn-warning" asp-controller="Orders" asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                            <a class="btn btn-success" asp-controller="Orders" asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                            <a class="btn btn-danger" asp-controller="Orders" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                        </td>
+                    </tr>
+        }
+    </tbody>
+</table>
