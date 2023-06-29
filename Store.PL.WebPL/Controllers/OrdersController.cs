@@ -1,19 +1,20 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Store.BLL;
+﻿using Microsoft.AspNetCore.Mvc;
 using Store.BLL.Interfaces;
 using Store.Entities;
+using Store.PL.WebPL.Models;
 using Store.PL.WebPL.Models.Order;
-using Store.PL.WebPL.Models.OrderItemVM;
 
 namespace Store.PL.WebPL.Controllers
 {
     public class OrdersController : Controller
     {
-        public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic)
+        private readonly int _pageSize = 3;
+
+        public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic,
+            int page = 1)
         {
-            var orders = (await orderLogic.GetAllAsync()).ToList();
-            var ordersVM = orders.Select(o => new DisplayOrderVM
+            var orders = await orderLogic.PageAsync(page, _pageSize);
+            var data = orders.Select(o => new DisplayOrderVM
             {
                 ID = o.Id,
                 Date = o.Date,
@@ -21,7 +22,21 @@ namespace Store.PL.WebPL.Controllers
                 Items = o.Items,
                 Provider = o.Provider.Name
             });
-            return View(ordersVM);
+
+            var pageInfo = new PagingInfo
+            {
+                CurrentPage = page,
+                PageSize = _pageSize,
+                TotalItems = await orderLogic.CountTotalItemsAsync()
+            };
+
+            var indexVM = new OrderIndexViewModel
+            {
+                Data = data,
+                PageInfo = pageInfo
+            };
+
+            return View(indexVM);
         }
 
         public async Task<IActionResult> Details([FromRoute] int id,
@@ -63,7 +78,7 @@ namespace Store.PL.WebPL.Controllers
                 return View(orderVM);
             }
 
-            await orderLogic.AddAsync(new Order 
+            var id = await orderLogic.AddAsync(new Order 
             { 
                 Number = orderVM.Number,
                 Date = orderVM.Date,
@@ -72,7 +87,7 @@ namespace Store.PL.WebPL.Controllers
 
             try
             {
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Orders", new { id });
             }
             catch
             {

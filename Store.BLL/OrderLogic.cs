@@ -37,5 +37,17 @@ namespace Store.BLL
         {
             await _orderDao.UpdateAsync(order);
         }
+
+        //Paging
+        
+        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize)
+        {
+            return await _orderDao.PageAsync(page, pageSize);
+        }
+
+        public async Task<int> CountTotalItemsAsync()
+        {
+            return await _orderDao.CountTotalItemsAsync();
+        }
     }
 }

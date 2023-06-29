@@ -13,5 +13,10 @@ namespace Store.DAL.Interfaces
         Task<Order> GetByIdAsync(int id);
 
         Task<ICollection<Order>> GetAllAsync();
+
+        //Paging
+        Task<IEnumerable<Order>> PageAsync(int page, int pageSize);
+
+        Task<int> CountTotalItemsAsync();
     }
 }

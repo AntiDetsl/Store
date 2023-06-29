@@ -2,7 +2,6 @@
 using Store.DAL.Context;
 using Store.DAL.Interfaces;
 using Store.Entities;
-using System.Threading.Tasks;
 
 namespace Store.DAL
 {
@@ -18,7 +17,9 @@ namespace Store.DAL
         public async Task<int> AddAsync(Order order)
         {
             _dbContext.Add(order);
-            return await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
+
+            return order.Id;
         }
 
         public async Task DeleteAsync(int id)
@@ -67,6 +68,34 @@ namespace Store.DAL
             await _dbContext.SaveChangesAsync();
 
             return order;
+        }
+
+        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize)
+        {
+            var query = GetAllSortedByIdDesc();
+
+            var paginatedData = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return paginatedData;
+        }
+
+        public async Task<int> CountTotalItemsAsync()
+        {
+            return await GetAllSortedByIdDesc().CountAsync();
+        }
+
+        private IQueryable<Order> GetAllSortedByIdDesc()
+        {
+            var orders = _dbContext.Orders
+                .OrderByDescending(o => o.Id)
+                .AsNoTracking()
+                .Include(o => o.Items)
+                .Include(o => o.Provider)
+                .AsQueryable();
+            return orders;
         }
     }
 }

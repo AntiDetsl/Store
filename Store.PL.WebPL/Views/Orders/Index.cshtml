@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DisplayOrderVM>
+﻿@model OrderIndexViewModel
 
 @{
     ViewData["Title"] = "Orders";
@@ -19,7 +19,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model) {
+        @foreach (var item in Model.Data) {
                     <tr class="table-secondary">
                         <th scope="row">@item.Number</th>
                         <td>@item.Date.ToShortDateString()</td>
@@ -33,3 +33,53 @@
         }
     </tbody>
 </table>
+
+<div>
+    <ul class="pagination">
+        @if(Model.PageInfo.TotalPages > 1)
+        {
+            if (Model.PageInfo.CurrentPage == 1)
+            {
+                <li class="page-item disabled">
+                    <a class="page-link" asp-controller="Orders" asp-action="Index" asp-route-page="1">1</a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-controller="Orders" asp-action="Index" asp-route-page="1">1</a>
+                </li>
+            }
+
+            int j = Model.PageInfo.CurrentPage - 2;
+            for(int i = 1; i <= 5; i++)
+            {
+                if(j <= 1 || j > Model.PageInfo.TotalPages)
+                {
+                    j++;
+                    continue;
+                }
+                else if(Model.PageInfo.CurrentPage == j)
+                {
+                    <li class="page-item disabled">
+                        <a class="page-link" asp-controller="Orders" asp-action="Index" asp-route-page="@j">@j</a>
+                    </li>
+                    j++;
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-controller="Orders" asp-action="Index" asp-route-page="@j">@j</a>
+                    </li>
+                    j++;
+                }
+            }
+        }
+    </ul>
+</div>
+
+@if (Model.PageInfo.CurrentPage == 1)
+{
+    <a class="btn btn-warning" asp-controller="Orders" asp-action="Index" asp-route-page="2">Page 2</a>
+}
+

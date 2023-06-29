@@ -64,7 +64,6 @@ namespace Store.PL.WebPL.Controllers
         {
             if (!ModelState.IsValid)
             {
-                //ViewBag.Id = id;
                 return View(itemVM);
             }
 
