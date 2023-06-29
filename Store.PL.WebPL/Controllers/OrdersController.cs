@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Store.BLL.Interfaces;
 using Store.Entities;
+using Store.Entities.Filters;
 using Store.PL.WebPL.Models;
 using Store.PL.WebPL.Models.Order;
 
@@ -8,20 +9,38 @@ namespace Store.PL.WebPL.Controllers
 {
     public class OrdersController : Controller
     {
-        private readonly int _pageSize = 3;
+        private readonly int _pageSize = 10;
 
         public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic,
+            [FromServices] IProviderLogic providerLogic,
+            [FromForm] OrderFiltersVM Filter,
             int page = 1)
         {
-            var orders = await orderLogic.PageAsync(page, _pageSize);
-            var data = orders.Select(o => new DisplayOrderVM
+            Filter.StartDate ??= DateTime.Now.AddMonths(-1).Date;
+            Filter.EndDate ??= DateTime.Now.Date;
+
+            var orderFilters = new OrderFilters
             {
-                ID = o.Id,
-                Date = o.Date,
-                Number = o.Number,
-                Items = o.Items,
-                Provider = o.Provider.Name
-            });
+                Numbers = Filter.Numbers,
+                Providers = Filter.Providers,
+                StartDate = Filter.StartDate.Value,
+                EndDate = Filter.EndDate.Value
+            };
+
+            var orders = (await orderLogic.PageAsync(page, _pageSize, orderFilters))
+                .Select(o => new DisplayOrderVM
+                {
+                    ID = o.Id,
+                    Date = o.Date,
+                    Number = o.Number,
+                    Items = o.Items,
+                    Provider = o.Provider.Name
+                });
+
+            var orderNumbers = await orderLogic.GetNumbersDistinct();
+
+            var orderProviders = (await providerLogic.GetAllAsync())
+                .Select(p => p.Name);
 
             var pageInfo = new PagingInfo
             {
@@ -32,12 +51,25 @@ namespace Store.PL.WebPL.Controllers
 
             var indexVM = new OrderIndexViewModel
             {
-                Data = data,
-                PageInfo = pageInfo
+                Data = new OrderDataVM
+                {
+                    Orders = orders,
+                    Numbers = orderNumbers,
+                    Providers = orderProviders
+                },
+                PageInfo = pageInfo,
+                Filter = Filter
             };
 
             return View(indexVM);
         }
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Filter([FromForm] OrderFiltersVM orderFilters)
+        //{
+        //    return Index();
+        //}
 
         public async Task<IActionResult> Details([FromRoute] int id,
             [FromServices] IOrderLogic orderLogic)

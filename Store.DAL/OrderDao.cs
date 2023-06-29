@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Store.DAL.Context;
+using Store.Entities.Filters;
 using Store.DAL.Interfaces;
 using Store.Entities;
 
@@ -70,9 +71,9 @@ namespace Store.DAL
             return order;
         }
 
-        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize)
+        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters)
         {
-            var query = GetAllSortedByIdDesc();
+            var query = Filter(filters);
 
             var paginatedData = await query
                 .Skip((page - 1) * pageSize)
@@ -85,6 +86,36 @@ namespace Store.DAL
         public async Task<int> CountTotalItemsAsync()
         {
             return await GetAllSortedByIdDesc().CountAsync();
+        }
+
+
+        public async Task<IEnumerable<string>> GetNumbersDistinct()
+        {
+            return await _dbContext.Orders
+                .AsNoTracking()
+                .Select(o=>o.Number)
+                .Distinct()
+                .ToListAsync();
+        }
+
+        private IQueryable<Order> Filter(OrderFilters filters)
+        {
+            var query = GetAllSortedByIdDesc();
+
+            if(filters.Providers != null && filters.Providers.Any())
+            {
+                query = query.Where(order => filters.Providers.Contains(order.Provider.Name));
+            }
+
+            if (filters.Numbers != null && filters.Numbers.Any())
+            {
+                query = query.Where(order => filters.Numbers.Contains(order.Number));
+            }
+
+            query = query.Where(order => order.Date >= filters.StartDate &&
+                order.Date <= filters.EndDate);
+
+            return query;
         }
 
         private IQueryable<Order> GetAllSortedByIdDesc()

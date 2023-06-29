@@ -1,4 +1,5 @@
 ﻿using Store.Entities;
+using Store.Entities.Filters;
 
 namespace Store.BLL.Interfaces
 {
@@ -14,9 +15,11 @@ namespace Store.BLL.Interfaces
 
         Task UpdateAsync(Order order);
 
+        Task<IEnumerable<string>> GetNumbersDistinct();
+
         //Paging
 
-        Task<IEnumerable<Order>> PageAsync(int page, int pageSize);
+        Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters);
 
         Task<int> CountTotalItemsAsync();
     }

@@ -1,4 +1,5 @@
 ﻿using Store.Entities;
+using Store.Entities.Filters;
 
 namespace Store.DAL.Interfaces
 {
@@ -14,8 +15,10 @@ namespace Store.DAL.Interfaces
 
         Task<ICollection<Order>> GetAllAsync();
 
+        Task<IEnumerable<string>> GetNumbersDistinct();
+
         //Paging
-        Task<IEnumerable<Order>> PageAsync(int page, int pageSize);
+        Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters);
 
         Task<int> CountTotalItemsAsync();
     }

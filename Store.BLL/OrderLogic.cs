@@ -1,6 +1,7 @@
 ﻿using Store.BLL.Interfaces;
 using Store.DAL.Interfaces;
 using Store.Entities;
+using Store.Entities.Filters;
 
 namespace Store.BLL
 {
@@ -40,14 +41,19 @@ namespace Store.BLL
 
         //Paging
         
-        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize)
+        public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters)
         {
-            return await _orderDao.PageAsync(page, pageSize);
+            return await _orderDao.PageAsync(page, pageSize, filters);
         }
 
         public async Task<int> CountTotalItemsAsync()
         {
             return await _orderDao.CountTotalItemsAsync();
+        }
+
+        public Task<IEnumerable<string>> GetNumbersDistinct()
+        {
+            return _orderDao.GetNumbersDistinct();
         }
     }
 }
