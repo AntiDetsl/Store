@@ -9,14 +9,14 @@ namespace Store.PL.WebPL.Controllers
 {
     public class OrdersController : Controller
     {
-        private readonly int _pageSize = 10;
+        private readonly int _pageSize = 2;
 
         public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic,
             [FromServices] IProviderLogic providerLogic,
             [FromForm] OrderFiltersVM Filter,
-            int page = 1)
+            [FromRoute] int page = 1)
         {
-            Filter.StartDate ??= DateTime.Now.AddMonths(-1).Date;
+            Filter.StartDate ??= DateTime.Now.AddMonths(-10000).Date;
             Filter.EndDate ??= DateTime.Now.Date;
 
             var orderFilters = new OrderFilters
@@ -46,7 +46,7 @@ namespace Store.PL.WebPL.Controllers
             {
                 CurrentPage = page,
                 PageSize = _pageSize,
-                TotalItems = await orderLogic.CountTotalItemsAsync()
+                TotalItems = await orderLogic.CountTotalItemsAsync(orderFilters)
             };
 
             var indexVM = new OrderIndexViewModel
@@ -64,12 +64,14 @@ namespace Store.PL.WebPL.Controllers
             return View(indexVM);
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Filter([FromForm] OrderFiltersVM orderFilters)
-        //{
-        //    return Index();
-        //}
+        [HttpPost("{controller}/{action}/{page:int}")]
+        public async Task<IActionResult> Page([FromRoute] int page,
+            [FromBody] OrderFiltersVM Filter,
+            [FromServices] IOrderLogic orderLogic,
+            [FromServices] IProviderLogic providerLogic)
+        {
+            return Json(Filter);
+        }
 
         public async Task<IActionResult> Details([FromRoute] int id,
             [FromServices] IOrderLogic orderLogic)

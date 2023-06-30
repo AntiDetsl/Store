@@ -83,9 +83,9 @@ namespace Store.DAL
             return paginatedData;
         }
 
-        public async Task<int> CountTotalItemsAsync()
+        public async Task<int> CountTotalItemsAsync(OrderFilters filters)
         {
-            return await GetAllSortedByIdDesc().CountAsync();
+            return await Filter(filters).CountAsync();
         }
 
 

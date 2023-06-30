@@ -20,6 +20,6 @@ namespace Store.DAL.Interfaces
         //Paging
         Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters);
 
-        Task<int> CountTotalItemsAsync();
+        Task<int> CountTotalItemsAsync(OrderFilters filters);
     }
 }

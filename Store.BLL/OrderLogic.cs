@@ -46,9 +46,9 @@ namespace Store.BLL
             return await _orderDao.PageAsync(page, pageSize, filters);
         }
 
-        public async Task<int> CountTotalItemsAsync()
+        public async Task<int> CountTotalItemsAsync(OrderFilters filters)
         {
-            return await _orderDao.CountTotalItemsAsync();
+            return await _orderDao.CountTotalItemsAsync(filters);
         }
 
         public Task<IEnumerable<string>> GetNumbersDistinct()
