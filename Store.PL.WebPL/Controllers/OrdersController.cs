@@ -10,7 +10,7 @@ namespace Store.PL.WebPL.Controllers
 {
     public class OrdersController : Controller
     {
-        private readonly int _pageSize = 2;
+        private readonly int _pageSize = 5;
 
         public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic,
             [FromServices] IOrderItemLogic itemLogic,
