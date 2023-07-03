@@ -1,47 +1,68 @@
-﻿@model OrderIndexViewModel
+﻿@model IndexViewModel
 
 @{
     ViewData["Title"] = "Orders";
 }
 
-<h1>Orders</h1>
-
-<p>
-    <a class="btn btn-info" asp-controller="Orders" asp-action="Create">Create New Order</a>
-</p>
+<h1 class="m-2">Orders</h1>
+<h2 class="m-2">Filters:</h2>
 <form method="post" asp-action="Index">
-    <div class="form-group">
-        <div class="form-group">
-            <label asp-for="Filter.Numbers" class="control-label"></label>
+    <div class="row">
+        <div class="col-3">
+            <label asp-for="Filter.Numbers" class="control-label">Filter by order number</label>
             <select id="Numbers" size="8" class="form-select" asp-for="Filter.Numbers" multiple>
-                @foreach (var n in Model.Data.Numbers)
+                @foreach (var number in Model.Data.Numbers)
                 {
-                    <option value="@n">@n</option>
+                    <option value="@number">@number</option>
                 }
             </select>
         </div>
-        <div class="form-group">
-            <label asp-for="Filter.Providers" class="control-label"></label>
+        <div class="col-2">
+            <label asp-for="Filter.Providers" class="control-label">Filter by order provider</label>
             <select id="Providers" size="8" class="form-select" asp-for="Filter.Providers" multiple>
-                @foreach (var p in Model.Data.Providers)
+                @foreach (var provider in Model.Data.Providers)
                 {
-                    <option value="@p">@p</option>
+                    <option value="@provider">@provider</option>
                 }
             </select>
         </div>
-        <div class="form-group">
-            <label asp-for="Filter.StartDate" class="control-label"></label>
-            <input class="form-control" id="StartDate" asp-for="Filter.StartDate" />
+        <div class="col-3">
+            <label asp-for="Filter.ItemNames" class="control-label">Filter by items</label>
+            <select id="ItemNames" size="8" class="form-select" asp-for="Filter.ItemNames" multiple>
+                @foreach (var name in Model.Data.ItemInfo.Names)
+                {
+                    <option value="@name">@name</option>
+                }
+            </select>
         </div>
-        <div class="form-group">
-            <label asp-for="Filter.EndDate" class="control-label"></label>
-            <input class="form-control" id="EndDate" asp-for="Filter.EndDate" />
+        <div class="col-2">
+            <label asp-for="Filter.ItemUnits" class="control-label">Filter by units</label>
+            <select id="ItemUnits" size="8" class="form-select" asp-for="Filter.ItemUnits" multiple>
+                @foreach (var unit in Model.Data.ItemInfo.Units)
+                {
+                    <option value="@unit">@unit</option>
+                }
+            </select>
         </div>
-        <div class="form-group">
-            <input type="submit" value="Apply filters" class="btn btn-primary" />
+        <div class="col-2">
+            <label class="control-label">Filter by order date</label>
+            <div class="form-group">
+                <label asp-for="Filter.StartDate" class="control-label">Start date</label>
+                <input class="form-control" id="StartDate" asp-for="Filter.StartDate" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Filter.EndDate" class="control-label">End date</label>
+                <input class="form-control" id="EndDate" asp-for="Filter.EndDate" />
+            </div>
+        </div>
+        <div class="form-group m-1">
+            <input type="submit" value="Apply filters" class="btn btn-primary m-1" />
         </div>
     </div>
 </form>
+<p class="m-1">
+    <a class="btn btn-info" asp-controller="Orders" asp-action="Create">Create New Order</a>
+</p>
 <table class="table">
     <thead>
         <tr>
@@ -122,30 +143,56 @@
     let providersSelect = document.getElementById("Providers");
     let Providers = Array.from(providersSelect.selectedOptions).map(option => option.value);
 
+    let itemNamesSelect = document.getElementById("ItemNames");
+    let ItemNames = Array.from(itemNamesSelect.selectedOptions).map(option => option.value);
+
+    let itemUnitsSelect = document.getElementById("ItemUnits");
+    let ItemUnits = Array.from(itemUnitsSelect.selectedOptions).map(option => option.value);
+
     let data = {
         Numbers: Numbers,
         Providers: Providers,
         StartDate: StartDate,
-        EndDate: EndDate
+        EndDate: EndDate,
+        ItemNames: ItemNames,
+        ItemUnits: ItemUnits
     };
 
     let links = document.getElementsByClassName("linkToPage");
 
-    for (let i = 0; i < links.length; i++) {
-        links[i].addEventListener("click", function (event) {
-            event.preventDefault();
+    on_load();
 
-            let url = '/Orders/Page/' + links[i].text;
-            let requestBody = JSON.stringify(data);
-            console.log(requestBody)
+    function on_load() {
+        for (let i = 0; i < links.length; i++) {
+            links[i].addEventListener("click", async function (event) {
+                event.preventDefault();
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: requestBody
+                let url = '/Orders/GetPage/' + links[i].text;
+                let requestBody = JSON.stringify(data);
+                console.log(requestBody)
+
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: requestBody
+                })
+                    .then(async function (response) {
+                        return await response.text()
+                    })
+                    .then(function (html) {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, "text/html");
+
+                        console.log(doc);
+                        document.body.innerHTML = doc.body.innerHTML;
+                        on_load();
+                    })
+                    .catch(function (err) {
+                        console.log('Failed to fetch page: ', err);
+                    });
             })
-        })
+        }
     }
 </script>

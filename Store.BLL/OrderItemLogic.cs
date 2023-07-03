@@ -15,7 +15,14 @@ namespace Store.BLL
 
         public async Task<int> AddAsync(OrderItem item)
         {
-            return await _itemDao.AddAsync(item);
+            try
+            {
+                return await _itemDao.AddAsync(item);
+            }
+            catch (ArgumentException)
+            {
+                return -1;
+            }
         }
 
         public async Task DeleteAsync(int id)
@@ -23,14 +30,32 @@ namespace Store.BLL
             await _itemDao.DeleteAsync(id);
         }
 
+        public async Task<IEnumerable<string>> GetAllNamesDistinct()
+        {
+            return await _itemDao.GetAllNamesDistinct();
+        }
+
+        public async Task<IEnumerable<string>> GetAllUnitsDistinct()
+        {
+            return await _itemDao.GetAllUnitsDistinct();
+        }
+
         public async Task<OrderItem> GetByIdAsync(int id)
         {
             return await _itemDao.GetByIdAsync(id);
         }
 
-        public async Task UpdateAsync(OrderItem item)
+        public async Task<bool> TryUpdateAsync(OrderItem item)
         {
-            await _itemDao.UpdateAsync(item);
+            try
+            {
+                await _itemDao.UpdateAsync(item);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
         }
     }
 }

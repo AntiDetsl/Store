@@ -16,7 +16,14 @@ namespace Store.BLL
 
         public async Task<int> AddAsync(Order order)
         {
-            return await _orderDao.AddAsync(order);
+            try
+            {
+                return await _orderDao.AddAsync(order);
+            }
+            catch(ArgumentException)
+            {
+                return -1;
+            }
         }
 
         public async Task DeleteAsync(int id)
@@ -34,9 +41,17 @@ namespace Store.BLL
             return await _orderDao.GetByIdAsync(id);
         }
 
-        public async Task UpdateAsync(Order order)
+        public async Task<bool> TryUpdateAsync(Order order)
         {
-            await _orderDao.UpdateAsync(order);
+            try
+            {
+                await _orderDao.UpdateAsync(order);
+                return true;
+            }
+            catch(ArgumentException)
+            {
+                return false;
+            }
         }
 
         //Paging

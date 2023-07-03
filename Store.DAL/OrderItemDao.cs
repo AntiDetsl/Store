@@ -15,10 +15,19 @@ namespace Store.DAL
 
         public async Task<int> AddAsync(OrderItem item)
         {
-            _dbContext.Add(item);
-            await _dbContext.SaveChangesAsync();
+            string? orderNumber = _dbContext.Orders.SingleOrDefault(o => o.Id == item.OrderId)?.Number;
 
-            return item.Id;
+            if (orderNumber == null || item.Name == orderNumber)
+            {
+                throw new ArgumentException("Item name can't be equal to order number", nameof(item));
+            }
+            else
+            {
+                _dbContext.Add(item);
+                await _dbContext.SaveChangesAsync();
+
+                return item.Id;
+            }
         }
 
         public async Task DeleteAsync(int id)
@@ -27,6 +36,28 @@ namespace Store.DAL
 
             _dbContext.Remove(item);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<string>> GetAllNamesDistinct()
+        {
+            IEnumerable<string> names = await _dbContext.Items
+                .AsNoTracking()
+                .Select(i => i.Name)
+                .Distinct()
+                .ToListAsync();
+
+            return names;
+        }
+
+        public async Task<IEnumerable<string>> GetAllUnitsDistinct()
+        {
+            IEnumerable<string> units = await _dbContext.Items
+                .AsNoTracking()
+                .Select(i => i.Unit)
+                .Distinct()
+                .ToListAsync();
+
+            return units;
         }
 
         public async Task<OrderItem> GetByIdAsync(int id)
@@ -40,8 +71,17 @@ namespace Store.DAL
 
         public async Task UpdateAsync(OrderItem item)
         {
-            _dbContext.Update(item);
-            await _dbContext.SaveChangesAsync();
+            string? orderNumber = _dbContext.Orders.SingleOrDefault(o => o.Id == item.OrderId)?.Number;
+
+            if (orderNumber == null || item.Name == orderNumber)
+            {
+                throw new ArgumentException("Item name can't be equal to order number", nameof(item));
+            }
+            else
+            {
+                _dbContext.Update(item);
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 }

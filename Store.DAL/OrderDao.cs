@@ -17,6 +17,16 @@ namespace Store.DAL
 
         public async Task<int> AddAsync(Order order)
         {
+            bool temp = await _dbContext.Orders
+                .AnyAsync(o => order.Number == o.Number 
+                && order.ProviderId == o.ProviderId);
+
+            if(temp)
+            {
+                throw new ArgumentException("There should not be two orders " +
+                    "from the same provider with the same number", nameof(order));
+            }
+
             _dbContext.Add(order);
             await _dbContext.SaveChangesAsync();
 
@@ -58,17 +68,26 @@ namespace Store.DAL
             return order;
         }
 
-        public async Task<Order> UpdateAsync(Order order)
+        public async Task UpdateAsync(Order order)
         {
-            if(order == null)
+            bool temp = await _dbContext.Orders
+                .AnyAsync(o => order.Id != o.Id
+                && order.Number == o.Number
+                && order.ProviderId == o.ProviderId);
+
+            if (temp)
+            {
+                throw new ArgumentException("There should not be two orders " +
+                    "from the same provider with the same number", nameof(order));
+            }
+
+            if (order == null)
             {
                 throw new ArgumentNullException(nameof(order));
             }
 
             _dbContext.Update(order);
             await _dbContext.SaveChangesAsync();
-
-            return order;
         }
 
         public async Task<IEnumerable<Order>> PageAsync(int page, int pageSize, OrderFilters filters)
@@ -114,6 +133,28 @@ namespace Store.DAL
 
             query = query.Where(order => order.Date >= filters.StartDate &&
                 order.Date <= filters.EndDate);
+
+            if (filters.ItemFilters != null)
+            {
+                query = FilterByItems(query, filters.ItemFilters);
+            }
+
+            return query;
+        }
+
+        private IQueryable<Order> FilterByItems(IQueryable<Order> query, ItemFilters filters) 
+        {
+            if(filters.Names != null && filters.Names.Any())
+            {
+                query = query.Where(order => order.Items
+                .Any(item => filters.Names.Contains(item.Name)));
+            }
+
+            if(filters.Units != null && filters.Units.Any())
+            {
+                query = query.Where(order => order.Items
+                .Any(item => filters.Units.Contains(item.Unit)));
+            }
 
             return query;
         }

@@ -9,7 +9,7 @@ namespace Store.DAL.Interfaces
 
         Task DeleteAsync(int id);
 
-        Task<Order> UpdateAsync(Order order);
+        Task UpdateAsync(Order order);
 
         Task<Order> GetByIdAsync(int id);
 

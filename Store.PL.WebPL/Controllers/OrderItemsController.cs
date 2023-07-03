@@ -27,6 +27,7 @@ namespace Store.PL.WebPL.Controllers
             };
 
             await itemLogic.AddAsync(item);
+
             return RedirectToAction("Details", "Orders", new { id = orderId });
         }
 
@@ -73,7 +74,7 @@ namespace Store.PL.WebPL.Controllers
             item.Quantity = itemVM.Quantity;
             item.Unit = itemVM.Unit;
 
-            await itemLogic.UpdateAsync(item);
+            await itemLogic.TryUpdateAsync(item);
 
             return RedirectToAction("Details", "Orders", new { id = item.OrderId });
         }

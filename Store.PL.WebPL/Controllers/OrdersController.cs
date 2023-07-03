@@ -4,6 +4,7 @@ using Store.Entities;
 using Store.Entities.Filters;
 using Store.PL.WebPL.Models;
 using Store.PL.WebPL.Models.Order;
+using Store.PL.WebPL.Models.OrderItemVM;
 
 namespace Store.PL.WebPL.Controllers
 {
@@ -12,11 +13,12 @@ namespace Store.PL.WebPL.Controllers
         private readonly int _pageSize = 2;
 
         public async Task<IActionResult> Index([FromServices] IOrderLogic orderLogic,
+            [FromServices] IOrderItemLogic itemLogic,
             [FromServices] IProviderLogic providerLogic,
-            [FromForm] OrderFiltersVM Filter,
+            [FromForm] FiltersVM Filter,
             [FromRoute] int page = 1)
         {
-            Filter.StartDate ??= DateTime.Now.AddMonths(-10000).Date;
+            Filter.StartDate ??= DateTime.Now.AddMonths(-1).Date;
             Filter.EndDate ??= DateTime.Now.Date;
 
             var orderFilters = new OrderFilters
@@ -26,6 +28,20 @@ namespace Store.PL.WebPL.Controllers
                 StartDate = Filter.StartDate.Value,
                 EndDate = Filter.EndDate.Value
             };
+
+            if((Filter.ItemNames != null && Filter.ItemNames.Any()) 
+                || (Filter.ItemUnits != null && Filter.ItemUnits.Any()))
+            {
+                orderFilters.ItemFilters = new ItemFilters
+                {
+                    Names = Filter.ItemNames,
+                    Units = Filter.ItemUnits
+                };
+            }
+            else
+            {
+                orderFilters.ItemFilters = null;
+            }
 
             var orders = (await orderLogic.PageAsync(page, _pageSize, orderFilters))
                 .Select(o => new DisplayOrderVM
@@ -42,6 +58,12 @@ namespace Store.PL.WebPL.Controllers
             var orderProviders = (await providerLogic.GetAllAsync())
                 .Select(p => p.Name);
 
+            var itemsInfo = new ItemInfoVM
+            {
+                Names = await itemLogic.GetAllNamesDistinct(),
+                Units = await itemLogic.GetAllUnitsDistinct()
+            };
+
             var pageInfo = new PagingInfo
             {
                 CurrentPage = page,
@@ -49,13 +71,14 @@ namespace Store.PL.WebPL.Controllers
                 TotalItems = await orderLogic.CountTotalItemsAsync(orderFilters)
             };
 
-            var indexVM = new OrderIndexViewModel
+            var indexVM = new IndexViewModel
             {
-                Data = new OrderDataVM
+                Data = new DataVM
                 {
                     Orders = orders,
                     Numbers = orderNumbers,
-                    Providers = orderProviders
+                    Providers = orderProviders,
+                    ItemInfo = itemsInfo,
                 },
                 PageInfo = pageInfo,
                 Filter = Filter
@@ -65,12 +88,76 @@ namespace Store.PL.WebPL.Controllers
         }
 
         [HttpPost("{controller}/{action}/{page:int}")]
-        public async Task<IActionResult> Page([FromRoute] int page,
-            [FromBody] OrderFiltersVM Filter,
-            [FromServices] IOrderLogic orderLogic,
-            [FromServices] IProviderLogic providerLogic)
+        public async Task<IActionResult> GetPage([FromServices] IOrderLogic orderLogic,
+            [FromServices] IOrderItemLogic itemLogic,
+            [FromServices] IProviderLogic providerLogic,
+            [FromRoute] int page,
+            [FromBody] FiltersVM Filter)
         {
-            return Json(Filter);
+            var orderFilters = new OrderFilters
+            {
+                Numbers = Filter.Numbers,
+                Providers = Filter.Providers,
+                StartDate = Filter.StartDate.Value,
+                EndDate = Filter.EndDate.Value
+            };
+
+            if ((Filter.ItemNames != null && Filter.ItemNames.Any())
+                || (Filter.ItemUnits != null && Filter.ItemUnits.Any()))
+            {
+                orderFilters.ItemFilters = new ItemFilters
+                {
+                    Names = Filter.ItemNames,
+                    Units = Filter.ItemUnits
+                };
+            }
+            else
+            {
+                orderFilters.ItemFilters = null;
+            }
+
+            var orders = (await orderLogic.PageAsync(page, _pageSize, orderFilters))
+                .Select(o => new DisplayOrderVM
+                {
+                    ID = o.Id,
+                    Date = o.Date,
+                    Number = o.Number,
+                    Items = o.Items,
+                    Provider = o.Provider.Name
+                });
+
+            var orderNumbers = await orderLogic.GetNumbersDistinct();
+
+            var orderProviders = (await providerLogic.GetAllAsync())
+                .Select(p => p.Name);
+
+            var itemsInfo = new ItemInfoVM
+            {
+                Names = await itemLogic.GetAllNamesDistinct(),
+                Units = await itemLogic.GetAllUnitsDistinct()
+            };
+
+            var pageInfo = new PagingInfo
+            {
+                CurrentPage = page,
+                PageSize = _pageSize,
+                TotalItems = await orderLogic.CountTotalItemsAsync(orderFilters)
+            };
+
+            var indexVM = new IndexViewModel
+            {
+                Data = new DataVM
+                {
+                    Orders = orders,
+                    Numbers = orderNumbers,
+                    Providers = orderProviders,
+                    ItemInfo = itemsInfo,
+                },
+                PageInfo = pageInfo,
+                Filter = Filter
+            };
+
+            return View("Index", indexVM);
         }
 
         public async Task<IActionResult> Details([FromRoute] int id,
@@ -118,6 +205,15 @@ namespace Store.PL.WebPL.Controllers
                 Date = orderVM.Date,
                 ProviderId = orderVM.Provider
             });
+
+            if(id == -1)
+            {
+                ModelState.AddModelError("Number", "There should not be two orders " +
+                    "from the same provider with the same number");
+
+                ViewBag.Providers = await providerLogic.GetAllAsync();
+                return View(orderVM);
+            }
 
             try
             {
@@ -171,7 +267,14 @@ namespace Store.PL.WebPL.Controllers
                 order.Provider = await providerLogic.GetByIdAsync(orderVM.Provider);
             }
 
-            await orderLogic.UpdateAsync(order);
+            if (!await orderLogic.TryUpdateAsync(order))
+            {
+                ModelState.AddModelError("Number", "There should not be two orders " +
+                    "from the same provider with the same number");
+
+                ViewBag.Providers = await providerLogic.GetAllAsync();
+                return View(orderVM);
+            }
 
             try
             {

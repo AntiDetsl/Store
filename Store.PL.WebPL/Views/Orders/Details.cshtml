@@ -16,26 +16,26 @@
             <table>
                 <thead>
                     <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Quantity </th>
-                        <th scope="col">Unit</th>
+                        <th scope="col" class="m-2">Name</th>
+                        <th scope="col" class="m-2">Quantity </th>
+                        <th scope="col" class="m-2">Unit</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     
-                        @foreach (var item in Model.Items)
-                        {
-                            <tr class="table-secondary">
-                                <th scope="row">@item.Name</th>
-                                <td>@item.Quantity</td>
-                                <td>@item.Unit</td>
-                                <td>
-                                    <a class="btn btn-warning" asp-controller="OrderItems" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                                    <a class="btn btn-danger" asp-controller="OrderItems" asp-action="Delete" asp-route-id="@item.Id" asp-route-orderId="@Model.ID">Delete</a>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="table-secondary">
+                            <th scope="row" class="m-2">@item.Name</th>
+                            <td class="m-2">@item.Quantity</td>
+                            <td class ="m-2">@item.Unit</td>
+                            <td>
+                                <a class="btn btn-warning m-2" asp-controller="OrderItems" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                                <a class="btn btn-danger m-2" asp-controller="OrderItems" asp-action="Delete" asp-route-id="@item.Id" asp-route-orderId="@Model.ID">Delete</a>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         }

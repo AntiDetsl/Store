@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Store.PL.WebPL.Models.Order
+namespace Store.PL.WebPL.Models
 {
-    public class OrderFiltersVM
+    public class FiltersVM
     {
         public IEnumerable<string> Numbers { get; set; }
 
@@ -13,5 +13,9 @@ namespace Store.PL.WebPL.Models.Order
 
         [UIHint("date")]
         public DateTime? EndDate { get; set; }
+
+        public IEnumerable<string> ItemNames { get; set; }
+
+        public IEnumerable<string> ItemUnits { get; set; }
     }
 }

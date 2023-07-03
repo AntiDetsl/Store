@@ -13,7 +13,7 @@ namespace Store.BLL.Interfaces
 
         Task<Order> GetByIdAsync(int id);
 
-        Task UpdateAsync(Order order);
+        Task<bool> TryUpdateAsync(Order order);
 
         Task<IEnumerable<string>> GetNumbersDistinct();
 

@@ -11,5 +11,9 @@ namespace Store.DAL.Interfaces
         Task<OrderItem> GetByIdAsync(int id);
 
         Task UpdateAsync(OrderItem item);
+
+        Task<IEnumerable<string>> GetAllNamesDistinct();
+
+        Task<IEnumerable<string>> GetAllUnitsDistinct();
     }
 }
